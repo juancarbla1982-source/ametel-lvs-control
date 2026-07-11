@@ -1,4 +1,5 @@
-VERSIÓN CORREGIDA 0.3.1
+CONTROL AMETEL · ENTREGA 1 LIMPIA
 
-Sube estos archivos al repositorio ametel-lvs-control.
-No incluye carpeta assets: el JavaScript y el CSS van integrados en index.html para evitar el error 404.
+Sube estos archivos a la raíz del repositorio ametel-lvs-control.
+No necesita carpeta assets.
+Después espera a GitHub Pages y recarga con Ctrl+F5.
