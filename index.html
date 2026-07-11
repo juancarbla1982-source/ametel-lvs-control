@@ -61,6 +61,13 @@
     .detail-row strong { color:#526574; }
     .file-label { display:block; padding:16px; border:2px dashed #a9bac7; border-radius:12px; text-align:center; cursor:pointer; background:#f8fafb; }
     .file-label input { display:none; }
+    .preview-section { margin-top:14px; padding:14px; border-radius:12px; background:#f8fafb; }
+    .preview-section h4 { margin:0 0 10px; }
+    .preview-list { max-height:220px; overflow:auto; display:grid; gap:7px; }
+    .preview-item { padding:9px 10px; border-radius:9px; background:white; border:1px solid #e4ebf0; }
+    .preview-item small { display:block; margin-top:3px; }
+    .history-list { display:grid; gap:10px; }
+    .history-item { padding:12px; background:#f8fafb; border-radius:10px; border:1px solid #e5ebf0; }
     @media(max-width:620px) {
       .detail-row { grid-template-columns:1fr; gap:2px; }
       .toolbar button { min-width:100%; }
@@ -117,12 +124,23 @@
               <div class="preview-box">A archivar<b id="toArchiveCount">0</b></div>
               <div class="preview-box">Filas válidas<b id="validCount">0</b></div>
             </div>
+            <div class="preview-section">
+              <h4>Detalle de cambios</h4>
+              <div id="previewDetails"></div>
+            </div>
             <div class="toolbar">
               <button id="confirmImportBtn" class="success">Confirmar importación</button>
               <button id="cancelImportBtn" class="secondary">Cancelar</button>
             </div>
           </div>
           <div id="importMessage" class="status hidden"></div>
+        </section>
+
+        <section class="section-card">
+          <h3>Historial de importaciones</h3>
+          <div id="importHistory" class="history-list">
+            <div class="empty">Aún no hay importaciones registradas.</div>
+          </div>
         </section>
 
         <div class="toolbar">
@@ -268,6 +286,7 @@
       if (state.profile?.role === "admin") {
         const usersSnap = await getDocs(collection(db, "users"));
         state.users = usersSnap.docs.map(d => ({ id:d.id, ...d.data() }));
+        await loadImportHistory();
       }
       updateLocations();
       renderInstallations();
@@ -461,9 +480,101 @@
       $("toArchiveCount").textContent = plan.archive.length;
       $("validCount").textContent = plan.parsed.length;
       $("importPreview").classList.remove("hidden");
+      renderPreviewDetails(plan);
       showMessage($("importMessage"),
         "Previsualización completada. Los estados, comentarios y datos de finalización existentes se conservarán.",
         "info");
+    }
+
+
+    function renderPreviewDetails(plan) {
+      const parts = [];
+
+      if (plan.create.length) {
+        parts.push(`
+          <div class="preview-section">
+            <h4>Nuevas (${plan.create.length})</h4>
+            <div class="preview-list">
+              ${plan.create.slice(0, 100).map(x => `
+                <div class="preview-item"><b>CD${escapeHtml(x.cd)} · ${escapeHtml(x.transformer)}</b>
+                <small>${escapeHtml(x.location || "Sin localidad")}</small></div>`).join("")}
+            </div>
+          </div>`);
+      }
+
+      if (plan.change.length) {
+        parts.push(`
+          <div class="preview-section">
+            <h4>Modificadas (${plan.change.length})</h4>
+            <div class="preview-list">
+              ${plan.change.slice(0, 100).map(({incoming, existing}) => {
+                const changes = [];
+                const oldTech = existing.technicalData || {};
+                const newTech = incoming.technicalData || {};
+                const keys = [...new Set([...Object.keys(oldTech), ...Object.keys(newTech)])];
+                keys.forEach(k => {
+                  const a = normalizeText(oldTech[k]);
+                  const b = normalizeText(newTech[k]);
+                  if (a !== b) changes.push(`${k}: "${a || "-"}" → "${b || "-"}"`);
+                });
+                if (normalizeText(existing.location) !== normalizeText(incoming.location)) {
+                  changes.unshift(`Localidad: "${existing.location || "-"}" → "${incoming.location || "-"}"`);
+                }
+                return `<div class="preview-item"><b>CD${escapeHtml(incoming.cd)} · ${escapeHtml(incoming.transformer)}</b>
+                  <small>${escapeHtml(changes.slice(0, 6).join(" | ") || "Datos técnicos actualizados")}</small></div>`;
+              }).join("")}
+            </div>
+          </div>`);
+      }
+
+      if (plan.archive.length) {
+        parts.push(`
+          <div class="preview-section">
+            <h4>A archivar (${plan.archive.length})</h4>
+            <div class="preview-list">
+              ${plan.archive.slice(0, 100).map(x => `
+                <div class="preview-item"><b>CD${escapeHtml(x.cd)} · ${escapeHtml(x.transformer)}</b>
+                <small>${escapeHtml(x.location || "Sin localidad")}</small></div>`).join("")}
+            </div>
+          </div>`);
+      }
+
+      if (!parts.length) {
+        parts.push('<div class="empty">No hay cambios que detallar.</div>');
+      }
+
+      $("previewDetails").innerHTML = parts.join("");
+    }
+
+    async function loadImportHistory() {
+      try {
+        const snap = await getDocs(collection(db, "imports"));
+        const rows = snap.docs
+          .map(d => ({ id:d.id, ...d.data() }))
+          .sort((a,b) => {
+            const at = a.createdAt?.seconds || 0;
+            const bt = b.createdAt?.seconds || 0;
+            return bt - at;
+          })
+          .slice(0, 20);
+
+        const root = $("importHistory");
+        if (!rows.length) {
+          root.innerHTML = '<div class="empty">Aún no hay importaciones registradas.</div>';
+          return;
+        }
+
+        root.innerHTML = rows.map(x => {
+          const date = x.createdAt?.toDate ? x.createdAt.toDate().toLocaleString("es-ES") : "Fecha pendiente";
+          return `<div class="history-item">
+            <b>${escapeHtml(x.fileName || "Excel")}</b><br>
+            <small>${escapeHtml(date)} · ${escapeHtml(x.importedByName || "")}</small><br>
+            <span>${x.validRows || 0} filas · ${x.newCount || 0} nuevas · ${x.changedCount || 0} modificadas · ${x.archivedCount || 0} archivadas</span>
+          </div>`;
+        }).join("");
+      } catch (err) {
+        console.error("No se pudo cargar el historial", err);
+      }
     }
 
     async function executeImport() {

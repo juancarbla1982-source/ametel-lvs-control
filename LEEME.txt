@@ -1,5 +1,5 @@
-CONTROL AMETEL · ENTREGA 2
+CONTROL AMETEL · ENTREGA 3
 
-Incluye importación del Excel de pendientes de Endesa con previsualización.
-Conserva estados, comentarios y datos de finalización existentes.
-Sube estos archivos a la raíz del repositorio ametel-lvs-control.
+Añade detalle de instalaciones nuevas, modificadas y archivadas antes de importar.
+Añade historial de importaciones.
+Sube todos los archivos a la raíz del repositorio y recarga con Ctrl+F5.
