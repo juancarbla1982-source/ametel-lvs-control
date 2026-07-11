@@ -1,4 +1,4 @@
-const CACHE='ametel-lvs-control-v020';
+const CACHE='control-ametel-entrega1-v031';
 const BASE='/ametel-lvs-control/';
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE).then(cache=>cache.add(BASE)).catch(()=>{}));});
 self.addEventListener('activate',event=>{event.waitUntil(Promise.all([self.clients.claim(),caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))]));});

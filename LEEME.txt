@@ -1,0 +1,4 @@
+VERSIÓN CORREGIDA 0.3.1
+
+Sube estos archivos al repositorio ametel-lvs-control.
+No incluye carpeta assets: el JavaScript y el CSS van integrados en index.html para evitar el error 404.

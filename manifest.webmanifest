@@ -1,6 +1,6 @@
 {
-  "name": "Ametel LVS Control",
-  "short_name": "LVS Control",
+  "name": "Control Ametel · LVS",
+  "short_name": "Control Ametel",
   "description": "Gestión compartida de instalaciones LVS de Ametel",
   "start_url": "/ametel-lvs-control/",
   "scope": "/ametel-lvs-control/",
