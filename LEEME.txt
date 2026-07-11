@@ -1,5 +1,5 @@
-CONTROL AMETEL · ENTREGA 1 LIMPIA
+CONTROL AMETEL · ENTREGA 2
 
+Incluye importación del Excel de pendientes de Endesa con previsualización.
+Conserva estados, comentarios y datos de finalización existentes.
 Sube estos archivos a la raíz del repositorio ametel-lvs-control.
-No necesita carpeta assets.
-Después espera a GitHub Pages y recarga con Ctrl+F5.

@@ -17,25 +17,28 @@
     .hero { background:#0f3d5e; color:white; padding:28px 18px 36px; text-align:center; }
     .hero h1 { margin:0 0 6px; font-size:28px; }
     .hero p { margin:0; opacity:.9; }
-    .card { max-width:620px; margin:-18px auto 24px; background:white; padding:22px; border-radius:18px;
+    .card { max-width:760px; margin:-18px auto 24px; background:white; padding:22px; border-radius:18px;
       box-shadow:0 8px 28px rgba(15,61,94,.15); }
     label { display:block; font-weight:700; margin:14px 0 7px; }
     input, textarea, select { width:100%; padding:14px; border:1px solid #c7d2dc; border-radius:12px; font-size:16px; }
     textarea { min-height:110px; resize:vertical; }
     button { width:100%; border:0; border-radius:12px; padding:14px 16px; font-size:16px; font-weight:700; cursor:pointer; }
+    button:disabled { opacity:.55; cursor:not-allowed; }
     .primary { background:#0f3d5e; color:white; }
     .success { background:#2f8f3a; color:white; }
     .secondary { background:#5d6b78; color:white; }
     .danger { background:#b33a3a; color:white; }
+    .warning { background:#c57a11; color:white; }
     .toolbar { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
     .toolbar button { width:auto; flex:1; min-width:150px; }
     .topbar { background:#0f3d5e; color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
     .topbar strong { font-size:19px; }
     .topbar button { width:auto; padding:9px 13px; background:#fff; color:#0f3d5e; }
-    .content { max-width:900px; margin:0 auto; padding:18px; }
+    .content { max-width:980px; margin:0 auto; padding:18px; }
     .status { margin-top:14px; padding:12px; border-radius:10px; background:#eef4f8; }
     .error { background:#fdecec; color:#8c2424; }
     .ok { background:#eaf7ec; color:#21652a; }
+    .info { background:#eaf2fb; color:#164d78; }
     .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin:18px 0; }
     .stat { background:white; padding:18px; border-radius:14px; box-shadow:0 4px 16px rgba(0,0,0,.06); }
     .stat b { display:block; font-size:28px; margin-top:6px; }
@@ -45,8 +48,23 @@
     .badge { display:inline-block; padding:5px 9px; border-radius:999px; font-size:13px; font-weight:700; }
     .pending { background:#fff1d6; color:#8b5a00; }
     .done { background:#e4f5e7; color:#21652a; }
+    .archived { background:#eceff2; color:#53606b; }
     small { color:#667787; }
     .empty { text-align:center; padding:24px; background:white; border-radius:14px; color:#667787; }
+    .section-card { background:white; padding:18px; border-radius:14px; box-shadow:0 4px 16px rgba(0,0,0,.06); margin-bottom:18px; }
+    .section-card h2, .section-card h3 { margin-top:0; }
+    .preview-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:10px; margin:15px 0; }
+    .preview-box { padding:14px; border-radius:12px; background:#f3f6f8; text-align:center; }
+    .preview-box b { display:block; font-size:24px; margin-top:4px; }
+    .details { margin-top:12px; border-top:1px solid #e7edf1; }
+    .detail-row { display:grid; grid-template-columns:minmax(150px,240px) 1fr; gap:10px; padding:8px 0; border-bottom:1px solid #eef2f5; }
+    .detail-row strong { color:#526574; }
+    .file-label { display:block; padding:16px; border:2px dashed #a9bac7; border-radius:12px; text-align:center; cursor:pointer; background:#f8fafb; }
+    .file-label input { display:none; }
+    @media(max-width:620px) {
+      .detail-row { grid-template-columns:1fr; gap:2px; }
+      .toolbar button { min-width:100%; }
+    }
   </style>
 </head>
 <body>
@@ -73,22 +91,47 @@
       <div><strong>Control Ametel · LVS</strong><br><small id="userLabel" style="color:#dbe7ef"></small></div>
       <button id="logoutBtn">Salir</button>
     </div>
+
     <main class="content">
       <div id="adminPanel" class="hidden">
         <h2>Panel de administrador</h2>
         <div class="grid">
           <div class="stat">Pendientes<b id="pendingCount">0</b></div>
           <div class="stat">Realizadas<b id="doneCount">0</b></div>
+          <div class="stat">Archivadas<b id="archivedCount">0</b></div>
           <div class="stat">Usuarios<b id="userCount">0</b></div>
         </div>
+
+        <section class="section-card">
+          <h3>Actualizar instalaciones desde Excel</h3>
+          <p>Selecciona el archivo de pendientes recibido de Endesa. Antes de modificar nada se mostrará una previsualización.</p>
+          <label class="file-label">
+            <input id="excelFile" type="file" accept=".xlsx,.xls" />
+            <span id="fileText">📥 Seleccionar Excel de instalaciones</span>
+          </label>
+          <div id="importPreview" class="hidden">
+            <div class="preview-grid">
+              <div class="preview-box">Nuevas<b id="newCount">0</b></div>
+              <div class="preview-box">Modificadas<b id="changedCount">0</b></div>
+              <div class="preview-box">Sin cambios<b id="sameCount">0</b></div>
+              <div class="preview-box">A archivar<b id="toArchiveCount">0</b></div>
+              <div class="preview-box">Filas válidas<b id="validCount">0</b></div>
+            </div>
+            <div class="toolbar">
+              <button id="confirmImportBtn" class="success">Confirmar importación</button>
+              <button id="cancelImportBtn" class="secondary">Cancelar</button>
+            </div>
+          </div>
+          <div id="importMessage" class="status hidden"></div>
+        </section>
+
         <div class="toolbar">
-          <button id="seedBtn" class="secondary">Cargar datos de prueba</button>
-          <button id="refreshBtn" class="primary">Actualizar</button>
+          <button id="refreshBtn" class="primary">Actualizar listado</button>
         </div>
       </div>
 
       <div id="workerPanel" class="hidden">
-        <h2>Instalaciones LVS</h2>
+        <h2>Instalaciones LVS pendientes</h2>
       </div>
 
       <div class="card" style="margin:18px 0 22px; max-width:none;">
@@ -96,6 +139,12 @@
         <input id="searchCd" placeholder="Ejemplo: 17125" inputmode="numeric" />
         <label for="locationFilter">Localidad</label>
         <select id="locationFilter"><option value="">Todas</option></select>
+        <label for="statusFilter" id="statusLabel">Estado</label>
+        <select id="statusFilter">
+          <option value="pending">Pendientes</option>
+          <option value="done">Realizadas</option>
+          <option value="all">Todas</option>
+        </select>
         <div class="toolbar">
           <button id="searchBtn" class="primary">Buscar</button>
           <button id="clearBtn" class="secondary">Limpiar</button>
@@ -107,6 +156,7 @@
     </main>
   </section>
 
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
     import {
@@ -132,8 +182,8 @@
     const db = getFirestore(app);
     await setPersistence(auth, browserLocalPersistence);
 
-    const $ = (id) => document.getElementById(id);
-    const state = { profile:null, installations:[], users:[] };
+    const $ = id => document.getElementById(id);
+    const state = { profile:null, installations:[], users:[], importPlan:null };
 
     function showMessage(el, text, type="ok") {
       el.textContent = text;
@@ -141,8 +191,25 @@
       el.classList.remove("hidden");
     }
     function hideMessage(el) { el.classList.add("hidden"); }
+    function normalizeText(v) { return String(v ?? "").trim(); }
+    function normalizeCd(v) { return normalizeText(v).replace(/^CD/i, "").replace(/\.0$/, ""); }
+    function normalizeTrafo(v) { return normalizeText(v).toUpperCase() || "SIN_TRAFO"; }
+    function safeKey(cd, trafo) {
+      return `CD${normalizeCd(cd)}_${normalizeTrafo(trafo).replace(/[^A-Z0-9_-]/g, "_")}`;
+    }
+    function cleanObject(obj) {
+      const out = {};
+      Object.entries(obj).forEach(([k,v]) => {
+        if (v instanceof Date) out[k] = v.toISOString();
+        else if (v !== undefined && v !== null && v !== "") out[k] = typeof v === "string" ? v.trim() : v;
+      });
+      return out;
+    }
+    function comparableTechnical(obj) {
+      return JSON.stringify(obj || {}, Object.keys(obj || {}).sort());
+    }
 
-    $("loginForm").addEventListener("submit", async (e) => {
+    $("loginForm").addEventListener("submit", async e => {
       e.preventDefault();
       hideMessage($("loginMessage"));
       try {
@@ -159,28 +226,17 @@
     $("clearBtn").addEventListener("click", () => {
       $("searchCd").value = "";
       $("locationFilter").value = "";
+      $("statusFilter").value = "pending";
       renderInstallations();
     });
+    $("locationFilter").addEventListener("change", renderInstallations);
+    $("statusFilter").addEventListener("change", renderInstallations);
 
-    $("seedBtn").addEventListener("click", async () => {
-      if (!confirm("¿Cargar 4 instalaciones de prueba?")) return;
-      const sample = [
-        { cd:"17125", transformer:"TR1", location:"Carmona", address:"Zona centro", status:"pending" },
-        { cd:"17135", transformer:"TR1", location:"Carmona", address:"Polígono industrial", status:"pending" },
-        { cd:"60247", transformer:"TR1", location:"Lora del Río", address:"Avenida principal", status:"pending" },
-        { cd:"17657", transformer:"TR2", location:"El Viso del Alcor", address:"Camino rural", status:"pending" }
-      ];
-      const batch = writeBatch(db);
-      sample.forEach((x) => {
-        const ref = doc(db, "installations", `CD${x.cd}_${x.transformer}`);
-        batch.set(ref, { ...x, createdAt:serverTimestamp(), updatedAt:serverTimestamp() }, { merge:true });
-      });
-      await batch.commit();
-      showMessage($("appMessage"), "Datos de prueba cargados.");
-      await loadAll();
-    });
+    $("excelFile").addEventListener("change", handleExcelSelection);
+    $("cancelImportBtn").addEventListener("click", resetImport);
+    $("confirmImportBtn").addEventListener("click", executeImport);
 
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, async user => {
       if (!user) {
         $("loginScreen").classList.remove("hidden");
         $("appScreen").classList.add("hidden");
@@ -196,6 +252,7 @@
         $("appScreen").classList.remove("hidden");
         $("adminPanel").classList.toggle("hidden", state.profile.role !== "admin");
         $("workerPanel").classList.toggle("hidden", state.profile.role === "admin");
+        $("statusFilter").value = "pending";
         await loadAll();
       } catch (err) {
         console.error(err);
@@ -208,7 +265,6 @@
       hideMessage($("appMessage"));
       const instSnap = await getDocs(query(collection(db, "installations"), orderBy("cd")));
       state.installations = instSnap.docs.map(d => ({ id:d.id, ...d.data() }));
-
       if (state.profile?.role === "admin") {
         const usersSnap = await getDocs(collection(db, "users"));
         state.users = usersSnap.docs.map(d => ({ id:d.id, ...d.data() }));
@@ -220,48 +276,68 @@
 
     function updateLocations() {
       const current = $("locationFilter").value;
-      const locations = [...new Set(state.installations.map(x => x.location).filter(Boolean))].sort();
+      const locations = [...new Set(state.installations
+        .filter(x => !x.archived)
+        .map(x => x.location)
+        .filter(Boolean))].sort((a,b) => a.localeCompare(b, "es"));
       $("locationFilter").innerHTML = '<option value="">Todas</option>' +
         locations.map(x => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
       $("locationFilter").value = current;
     }
 
     function updateStats() {
-      $("pendingCount").textContent = state.installations.filter(x => x.status !== "done").length;
-      $("doneCount").textContent = state.installations.filter(x => x.status === "done").length;
+      $("pendingCount").textContent = state.installations.filter(x => !x.archived && x.status !== "done").length;
+      $("doneCount").textContent = state.installations.filter(x => !x.archived && x.status === "done").length;
+      $("archivedCount").textContent = state.installations.filter(x => x.archived).length;
       $("userCount").textContent = state.users.length;
     }
 
     function renderInstallations() {
       const term = $("searchCd").value.trim().toLowerCase().replace(/^cd/, "");
       const loc = $("locationFilter").value;
+      const status = $("statusFilter").value;
       const rows = state.installations.filter(x => {
+        if (x.archived) return false;
         const matchTerm = !term || String(x.cd || "").toLowerCase().includes(term);
         const matchLoc = !loc || x.location === loc;
-        return matchTerm && matchLoc;
+        const matchStatus = status === "all" ||
+          (status === "done" && x.status === "done") ||
+          (status === "pending" && x.status !== "done");
+        return matchTerm && matchLoc && matchStatus;
       });
+
       const root = $("installationsList");
       if (!rows.length) {
         root.innerHTML = '<div class="empty">No hay instalaciones para mostrar.</div>';
         return;
       }
-      root.innerHTML = rows.map(x => `
-        <article class="item">
-          <h3>CD${escapeHtml(x.cd || "")} ${escapeHtml(x.transformer || "")}</h3>
-          <span class="badge ${x.status === "done" ? "done" : "pending"}">${x.status === "done" ? "Realizada" : "Pendiente"}</span>
-          <p><b>Localidad:</b> ${escapeHtml(x.location || "-")}<br>
-          <b>Ubicación:</b> ${escapeHtml(x.address || "-")}</p>
-          <label>Comentario</label>
-          <textarea id="comment_${x.id}" placeholder="Escribe un comentario libre...">${escapeHtml(x.comment || "")}</textarea>
-          <div class="toolbar">
-            <button class="primary" data-save="${x.id}">Guardar comentario</button>
-            ${x.status === "done"
-              ? (state.profile?.role === "admin" ? `<button class="secondary" data-pending="${x.id}">Volver a pendiente</button>` : "")
-              : `<button class="success" data-done="${x.id}">Finalizar instalación</button>`}
-          </div>
-          ${x.completedByName ? `<small>Finalizada por ${escapeHtml(x.completedByName)}.</small>` : ""}
-        </article>
-      `).join("");
+
+      root.innerHTML = rows.map(x => {
+        const tech = x.technicalData || {};
+        const detailRows = Object.entries(tech).map(([k,v]) =>
+          `<div class="detail-row"><strong>${escapeHtml(k)}</strong><span>${escapeHtml(v)}</span></div>`
+        ).join("");
+
+        return `
+          <article class="item">
+            <h3>CD${escapeHtml(x.cd || "")} · ${escapeHtml(x.transformer || "")}</h3>
+            <span class="badge ${x.status === "done" ? "done" : "pending"}">${x.status === "done" ? "Realizada" : "Pendiente"}</span>
+            <p><b>Localidad:</b> ${escapeHtml(x.location || "-")}</p>
+            <details>
+              <summary><b>Ver todos los datos del CD</b></summary>
+              <div class="details">${detailRows || '<p>Sin datos técnicos.</p>'}</div>
+            </details>
+            <label>Comentario (opcional)</label>
+            <textarea id="comment_${x.id}" placeholder="Escribe un comentario libre...">${escapeHtml(x.comment || "")}</textarea>
+            <div class="toolbar">
+              <button class="primary" data-save="${x.id}">Guardar comentario</button>
+              ${x.status === "done"
+                ? (state.profile?.role === "admin" ? `<button class="secondary" data-pending="${x.id}">Volver a pendiente</button>` : "")
+                : `<button class="success" data-done="${x.id}">Finalizar instalación</button>`}
+            </div>
+            ${x.completedByName ? `<small>Finalizada por ${escapeHtml(x.completedByName)}.</small>` : ""}
+          </article>`;
+      }).join("");
 
       root.querySelectorAll("[data-save]").forEach(btn => btn.onclick = () => saveComment(btn.dataset.save));
       root.querySelectorAll("[data-done]").forEach(btn => btn.onclick = () => setStatus(btn.dataset.done, "done"));
@@ -277,26 +353,233 @@
         commentAt:serverTimestamp(),
         updatedAt:serverTimestamp()
       });
-      await addDoc(collection(db, "installations", id, "comments"), {
-        text,
-        userId:auth.currentUser.uid,
-        userName:state.profile.name || auth.currentUser.email,
-        createdAt:serverTimestamp()
-      });
+      if (text) {
+        await addDoc(collection(db, "installations", id, "comments"), {
+          text,
+          userId:auth.currentUser.uid,
+          userName:state.profile.name || auth.currentUser.email,
+          createdAt:serverTimestamp()
+        });
+      }
       showMessage($("appMessage"), "Comentario guardado.");
       await loadAll();
     }
 
     async function setStatus(id, status) {
+      const current = state.installations.find(x => x.id === id);
+      const commentText = $(`comment_${id}`)?.value.trim() || current?.comment || "";
       await updateDoc(doc(db, "installations", id), {
         status,
+        comment:commentText,
+        commentBy:commentText ? auth.currentUser.uid : (current?.commentBy || null),
+        commentByName:commentText ? (state.profile.name || auth.currentUser.email) : (current?.commentByName || null),
+        commentAt:commentText ? serverTimestamp() : (current?.commentAt || null),
         completedBy: status === "done" ? auth.currentUser.uid : null,
         completedByName: status === "done" ? (state.profile.name || auth.currentUser.email) : null,
         completedAt: status === "done" ? serverTimestamp() : null,
         updatedAt:serverTimestamp()
       });
-      showMessage($("appMessage"), status === "done" ? "Instalación finalizada." : "Instalación devuelta a pendiente.");
+      showMessage($("appMessage"), status === "done" ? "Instalación realizada correctamente." : "Instalación devuelta a pendiente.");
       await loadAll();
+      window.scrollTo({ top:0, behavior:"smooth" });
+    }
+
+    async function handleExcelSelection(event) {
+      hideMessage($("importMessage"));
+      const file = event.target.files?.[0];
+      if (!file) return;
+      $("fileText").textContent = `📄 ${file.name}`;
+      try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type:"array", cellDates:true });
+        const sheetName = workbook.SheetNames[0];
+        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+          defval:"",
+          raw:false,
+          dateNF:"yyyy-mm-dd"
+        });
+        const parsed = rows.map(parseExcelRow).filter(Boolean);
+        if (!parsed.length) throw new Error("No se encontraron filas válidas con CD y Trafo.");
+        state.importPlan = buildImportPlan(parsed);
+        renderImportPreview(state.importPlan);
+      } catch (err) {
+        console.error(err);
+        resetImport(false);
+        showMessage($("importMessage"), `No se pudo leer el Excel: ${err.message}`, "error");
+      }
+    }
+
+    function parseExcelRow(row) {
+      const cd = normalizeCd(row["CD"]);
+      const transformer = normalizeTrafo(row["Trafo"]);
+      if (!cd || !transformer || transformer === "SIN_TRAFO") return null;
+
+      const technicalData = cleanObject(row);
+      const location =
+        normalizeText(row["Ubicación Ssee"]) ||
+        normalizeText(row["Instalación de TI pospuesta"]) ||
+        normalizeText(row["UO"]) ||
+        "Sin localidad";
+
+      return {
+        id:safeKey(cd, transformer),
+        cd,
+        transformer,
+        location,
+        technicalData
+      };
+    }
+
+    function buildImportPlan(parsed) {
+      const incomingMap = new Map(parsed.map(x => [x.id, x]));
+      const currentMap = new Map(state.installations.map(x => [x.id, x]));
+      const create = [], change = [], same = [], archive = [];
+
+      for (const incoming of parsed) {
+        const existing = currentMap.get(incoming.id);
+        if (!existing) {
+          create.push(incoming);
+        } else {
+          const sameTech = comparableTechnical(existing.technicalData) === comparableTechnical(incoming.technicalData);
+          const sameLocation = normalizeText(existing.location) === normalizeText(incoming.location);
+          if (sameTech && sameLocation && existing.archived !== true) same.push(incoming);
+          else change.push({ incoming, existing });
+        }
+      }
+
+      for (const existing of state.installations) {
+        if (!existing.archived && !incomingMap.has(existing.id)) archive.push(existing);
+      }
+
+      return { parsed, create, change, same, archive };
+    }
+
+    function renderImportPreview(plan) {
+      $("newCount").textContent = plan.create.length;
+      $("changedCount").textContent = plan.change.length;
+      $("sameCount").textContent = plan.same.length;
+      $("toArchiveCount").textContent = plan.archive.length;
+      $("validCount").textContent = plan.parsed.length;
+      $("importPreview").classList.remove("hidden");
+      showMessage($("importMessage"),
+        "Previsualización completada. Los estados, comentarios y datos de finalización existentes se conservarán.",
+        "info");
+    }
+
+    async function executeImport() {
+      const plan = state.importPlan;
+      if (!plan) return;
+      if (!confirm(`¿Confirmar la importación de ${plan.parsed.length} instalaciones válidas?`)) return;
+
+      $("confirmImportBtn").disabled = true;
+      showMessage($("importMessage"), "Importando instalaciones…", "info");
+
+      try {
+        const operations = [];
+
+        plan.create.forEach(incoming => {
+          operations.push({
+            type:"set",
+            ref:doc(db, "installations", incoming.id),
+            data:{
+              cd:incoming.cd,
+              transformer:incoming.transformer,
+              location:incoming.location,
+              technicalData:incoming.technicalData,
+              status:"pending",
+              archived:false,
+              source:"excel",
+              createdAt:serverTimestamp(),
+              updatedAt:serverTimestamp(),
+              importedAt:serverTimestamp(),
+              importedBy:auth.currentUser.uid
+            }
+          });
+        });
+
+        plan.change.forEach(({incoming}) => {
+          operations.push({
+            type:"set",
+            ref:doc(db, "installations", incoming.id),
+            data:{
+              cd:incoming.cd,
+              transformer:incoming.transformer,
+              location:incoming.location,
+              technicalData:incoming.technicalData,
+              archived:false,
+              source:"excel",
+              updatedAt:serverTimestamp(),
+              importedAt:serverTimestamp(),
+              importedBy:auth.currentUser.uid
+            },
+            merge:true
+          });
+        });
+
+        plan.same.forEach(incoming => {
+          operations.push({
+            type:"set",
+            ref:doc(db, "installations", incoming.id),
+            data:{
+              archived:false,
+              importedAt:serverTimestamp(),
+              importedBy:auth.currentUser.uid
+            },
+            merge:true
+          });
+        });
+
+        plan.archive.forEach(existing => {
+          operations.push({
+            type:"set",
+            ref:doc(db, "installations", existing.id),
+            data:{
+              archived:true,
+              archivedAt:serverTimestamp(),
+              archivedBy:auth.currentUser.uid,
+              updatedAt:serverTimestamp()
+            },
+            merge:true
+          });
+        });
+
+        for (let i=0; i<operations.length; i+=400) {
+          const batch = writeBatch(db);
+          operations.slice(i, i+400).forEach(op => batch.set(op.ref, op.data, { merge:op.merge === true }));
+          await batch.commit();
+        }
+
+        await addDoc(collection(db, "imports"), {
+          fileName:$("excelFile").files?.[0]?.name || "Excel",
+          validRows:plan.parsed.length,
+          newCount:plan.create.length,
+          changedCount:plan.change.length,
+          sameCount:plan.same.length,
+          archivedCount:plan.archive.length,
+          importedBy:auth.currentUser.uid,
+          importedByName:state.profile.name || auth.currentUser.email,
+          createdAt:serverTimestamp()
+        });
+
+        showMessage($("importMessage"),
+          `Importación completada: ${plan.create.length} nuevas, ${plan.change.length} modificadas y ${plan.archive.length} archivadas.`,
+          "ok");
+        await loadAll();
+        resetImport(false);
+      } catch (err) {
+        console.error(err);
+        showMessage($("importMessage"), `Error durante la importación: ${err.message}`, "error");
+      } finally {
+        $("confirmImportBtn").disabled = false;
+      }
+    }
+
+    function resetImport(clearMessage=true) {
+      state.importPlan = null;
+      $("excelFile").value = "";
+      $("fileText").textContent = "📥 Seleccionar Excel de instalaciones";
+      $("importPreview").classList.add("hidden");
+      if (clearMessage) hideMessage($("importMessage"));
     }
 
     function escapeHtml(value) {
