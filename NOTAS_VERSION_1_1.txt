@@ -1,0 +1,23 @@
+CONTROL AMETEL · LVS MONTAJES · VERSIÓN 1.1
+
+NOVEDAD PRINCIPAL
+- Fotografías asociadas a cada montaje.
+
+FUNCIONES
+- Hacer o añadir una cantidad variable de fotos desde el móvil.
+- Compresión automática antes de subir.
+- Visualización de la galería.
+- Eliminar fotos propias o, si eres administrador, cualquier foto.
+- Desde PC y como administrador: abrir cada fotografía para guardarla.
+- El nombre recomendado se copia al portapapeles:
+  CD103270_TR1_01.jpg
+
+ORGANIZACIÓN EN FIREBASE STORAGE
+- installations/{ID_DEL_MONTAJE}/archivo.jpg
+
+ORGANIZACIÓN EN FIRESTORE
+- installations/{ID_DEL_MONTAJE}/photos/{ID_FOTO}
+
+IMPORTANTE
+Las reglas de Firebase Storage deben permitir también la ruta /installations/.
+Consulta el archivo REGLAS_STORAGE_MONTAJES.txt incluido en esta versión.

@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && firestore.get(
+          /databases/(default)/documents/users/$(request.auth.uid)
+        ).data.role == "admin";
+    }
+
+    // Fotografías de incidencias (mantiene la app actual).
+    match /incidents/{incidentId}/{fileName} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.metadata.uploadedBy == request.auth.uid;
+
+      allow delete: if isSignedIn()
+        && (
+          isAdmin()
+          || resource.metadata.uploadedBy == request.auth.uid
+        );
+
+      allow update: if false;
+    }
+
+    // Fotografías de montajes.
+    match /installations/{installationId}/{fileName} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.metadata.uploadedBy == request.auth.uid;
+
+      allow delete: if isSignedIn()
+        && (
+          isAdmin()
+          || resource.metadata.uploadedBy == request.auth.uid
+        );
+
+      allow update: if false;
+    }
+  }
+}
